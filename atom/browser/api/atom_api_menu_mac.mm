@@ -47,7 +47,6 @@ void MenuMac::PopupOnUI(const base::WeakPtr<NativeWindow>& native_window,
                         bool async) {
   if (!native_window)
     return;
-
   brightray::InspectableWebContents* web_contents =
       native_window->inspectable_web_contents();
   if (!web_contents || !web_contents->GetWebContents())
