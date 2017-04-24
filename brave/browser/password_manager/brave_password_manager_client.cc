@@ -50,14 +50,23 @@
 #include "components/sessions/content/content_record_password_state.h"
 #include "components/signin/core/browser/signin_manager.h"
 #include "components/version_info/version_info.h"
+#include "content/public/browser/child_process_security_policy.h"
 #include "content/public/browser/navigation_entry.h"
+#include "content/public/browser/navigation_handle.h"
 #include "content/public/browser/render_view_host.h"
 #include "content/public/browser/ssl_status.h"
 #include "content/public/browser/web_contents.h"
 #include "content/public/common/origin_util.h"
+#include "extensions/features/features.h"
 #include "google_apis/gaia/gaia_urls.h"
 #include "net/base/url_util.h"
+#include "net/http/transport_security_state.h"
+#include "net/url_request/url_request_context.h"
 #include "third_party/re2/src/re2/re2.h"
+
+#if BUILDFLAG(ENABLE_EXTENSIONS)
+#include "extensions/common/constants.h"
+#endif
 
 using password_manager::ContentPasswordManagerDriverFactory;
 using password_manager::PasswordManagerInternalsService;
@@ -110,12 +119,6 @@ BravePasswordManagerClient::BravePasswordManagerClient(
 }
 
 BravePasswordManagerClient::~BravePasswordManagerClient() {}
-
-bool BravePasswordManagerClient::IsAutomaticPasswordSavingEnabled() const {
-  return base::FeatureList::IsEnabled(
-             password_manager::features::kEnableAutomaticPasswordSaving) &&
-         chrome::GetChannel() == version_info::Channel::UNKNOWN;
-}
 
 void BravePasswordManagerClient::Initialize(
   atom::api::WebContents* api_web_contents) {
@@ -183,6 +186,22 @@ bool BravePasswordManagerClient::IsFillingEnabledForCurrentPage() const {
          IsPasswordManagementEnabledForCurrentPage();
 }
 
+bool BravePasswordManagerClient::IsHSTSActiveForHost(
+    const GURL& origin) const {
+  if (!origin.is_valid())
+    return false;
+
+  net::TransportSecurityState* security_state =
+      profile_->GetRequestContext()
+          ->GetURLRequestContext()
+          ->transport_security_state();
+
+  if (!security_state)
+    return false;
+
+  return security_state->ShouldUpgradeToSSL(origin.host());
+}
+
 bool BravePasswordManagerClient::OnCredentialManagerUsed() {
   return true;
 }
@@ -193,10 +212,8 @@ bool BravePasswordManagerClient::PromptUserToSaveOrUpdatePassword(
     bool update_password) {
   // Save password infobar and the password bubble prompts in case of
   // "webby" URLs and do not prompt in case of "non-webby" URLS (e.g. file://).
-  if (!BrowsingDataHelper::IsWebScheme(
-      web_contents()->GetLastCommittedURL().scheme())) {
+  if (!CanShowBubbleOnURL(web_contents()->GetLastCommittedURL()))
     return false;
-  }
   const autofill::PasswordForm *form = form_to_save->submitted_form();
     form_to_save_ = std::move(form_to_save);
   if (update_password) {
@@ -296,9 +313,11 @@ void BravePasswordManagerClient::PasswordWasAutofilled(
 void BravePasswordManagerClient::HidePasswordGenerationPopup() {
 }
 
-void BravePasswordManagerClient::DidNavigateMainFrame(
-    const content::LoadCommittedDetails& details,
-    const content::FrameNavigateParams& params) {
+void BravePasswordManagerClient::DidFinishNavigation(
+    content::NavigationHandle* navigation_handle) {
+  if (!navigation_handle->IsInMainFrame() || !navigation_handle->HasCommitted())
+    return;
+
   password_reuse_detection_manager_.DidNavigateMainFrame(GetMainFrameURL());
   // After some navigations RenderViewHost persists and just adding the observer
   // will cause multiple call of OnInputEvent. Since Widget API doesn't allow to
@@ -522,4 +541,15 @@ void BravePasswordManagerClient::BindCredentialManager(
     return;
 
   instance->credential_manager_impl_.BindRequest(std::move(request));
+}
+
+// static
+bool BravePasswordManagerClient::CanShowBubbleOnURL(const GURL& url) {
+  std::string scheme = url.scheme();
+  return (content::ChildProcessSecurityPolicy::GetInstance()->IsWebSafeScheme(
+              scheme) &&
+#if BUILDFLAG(ENABLE_EXTENSIONS)
+          scheme != extensions::kExtensionScheme &&
+#endif
+          scheme != content::kChromeDevToolsScheme);
 }

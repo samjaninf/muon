@@ -63,9 +63,9 @@ class BravePasswordManagerClient
   void DidClickNoUpdate();
 
   // PasswordManagerClient implementation.
-  bool IsAutomaticPasswordSavingEnabled() const override;
   bool IsSavingAndFillingEnabledForCurrentPage() const override;
   bool IsFillingEnabledForCurrentPage() const override;
+  bool IsHSTSActiveForHost(const GURL& origin) const override;
   bool OnCredentialManagerUsed() override;
   bool PromptUserToSaveOrUpdatePassword(
       std::unique_ptr<password_manager::PasswordFormManager> form_to_save,
@@ -132,6 +132,10 @@ class BravePasswordManagerClient
       content::RenderFrameHost* render_frame_host,
       password_manager::mojom::CredentialManagerRequest request);
 
+  // A helper method to determine whether a save/update bubble can be shown
+  // on this |url|.
+  static bool CanShowBubbleOnURL(const GURL& url);
+
  protected:
   // Callable for tests.
   BravePasswordManagerClient(content::WebContents* web_contents,
@@ -143,9 +147,8 @@ class BravePasswordManagerClient
   // content::WebContentsObserver overrides.
   void DidStartNavigation(
       content::NavigationHandle* navigation_handle) override;
-  void DidNavigateMainFrame(
-      const content::LoadCommittedDetails& details,
-      const content::FrameNavigateParams& params) override;
+  void DidFinishNavigation(
+      content::NavigationHandle* navigation_handle) override;
 
   // content::RenderWidgetHost::InputEventObserver overrides.
   void OnInputEvent(const blink::WebInputEvent&) override;
