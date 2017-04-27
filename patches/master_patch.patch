@@ -231,17 +231,17 @@ index c384b7e054b07fa3eb20ad6b794bd748fcaf5665..22ca673c3e9a82d3dfa4a6e95a9cf744
 +
    // Number of discard events since Chrome started.
    int discard_count() const { return discard_count_; }
-
+ 
 @@ -187,6 +192,7 @@ class TabManager : public TabStripModelObserver {
    // This is needed so WebContentsData can call OnDiscardedStateChange, and
    // can use PurgeAndSuspendState.
    friend class WebContentsData;
 +  friend class GuestTabManager;
-
+ 
    // Called by WebContentsData whenever the discard state of a WebContents
    // changes, so that observers can be informed.
 diff --git a/chrome/browser/password_manager/password_store_factory.cc b/chrome/browser/password_manager/password_store_factory.cc
-index 65020c1482d1979332f48f08fef99edfc6117cda..ca14d2489bc14b52631878d80beeb86a43181a9f 100644
+index 65020c1482d1979332f48f08fef99edfc6117cda..043fba96fc0c7c4b35fff4ad2b7b935e7e8950ac 100644
 --- a/chrome/browser/password_manager/password_store_factory.cc
 +++ b/chrome/browser/password_manager/password_store_factory.cc
 @@ -84,22 +84,22 @@ PasswordStoreFactory* PasswordStoreFactory::GetInstance() {
@@ -291,7 +291,17 @@ index 65020c1482d1979332f48f08fef99edfc6117cda..ca14d2489bc14b52631878d80beeb86a
  }
  
  PasswordStoreFactory::~PasswordStoreFactory() {}
-@@ -260,8 +260,10 @@ PasswordStoreFactory::BuildServiceInstanceFor(
+@@ -163,8 +163,7 @@ PasswordStoreFactory::BuildServiceInstanceFor(
+ #if defined(OS_WIN)
+   ps = new PasswordStoreWin(main_thread_runner, db_thread_runner,
+                             std::move(login_db),
+-                            WebDataServiceFactory::GetPasswordWebDataForProfile(
+-                                profile, ServiceAccessType::EXPLICIT_ACCESS));
++                            profile->GetPasswordWebdataService());
+ #elif defined(OS_MACOSX)
+   std::unique_ptr<crypto::AppleKeychain> keychain(
+       base::CommandLine::ForCurrentProcess()->HasSwitch(
+@@ -260,8 +259,10 @@ PasswordStoreFactory::BuildServiceInstanceFor(
    NOTIMPLEMENTED();
  #endif
    DCHECK(ps);

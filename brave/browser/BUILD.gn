@@ -6,6 +6,25 @@ import("//extensions/features/features.gni")
 import("//ppapi/features/features.gni")
 import("//printing/features/features.gni")
 
+if (is_win) {
+  # This is in a separate config so the flags can be applied to dependents.
+  # ldflags in GN aren't automatically inherited.
+  config("browser_win_linker_flags") {
+    libs = [
+      "credui.lib",
+      "cryptui.lib",
+      "dwmapi.lib",
+      "netapi32.lib",
+      "ndfapi.lib",  # Used by browser/net/net_error_diagnostics_dialog_win.h
+      "pdh.lib",  # Used by browser/private_working_set_snapshot.h
+    ]
+    ldflags = [
+      "/DELAYLOAD:ndfapi.dll",
+      "/DELAYLOAD:pdh.dll",  # The task manager is rarely used.
+    ]
+  }
+}
+
 
 source_set("browser") {
   configs += [
@@ -41,6 +60,10 @@ source_set("browser") {
     "//chrome/browser/password_manager/password_store_mac.cc",
     "//chrome/browser/password_manager/simple_password_store_mac.h",
     "//chrome/browser/password_manager/simple_password_store_mac.cc",
+    "//chrome/browser/password_manager/password_manager_util_win.h",
+    "//chrome/browser/password_manager/password_manager_util_win.cc",
+    "//chrome/browser/password_manager/password_store_win.h",
+    "//chrome/browser/password_manager/password_store_win.cc",
     "brave_browser_context.h",
     "brave_browser_context.cc",
     "brave_content_browser_client.h",
@@ -85,6 +108,8 @@ source_set("browser") {
     "//third_party/WebKit/public:image_resources",
     "//third_party/WebKit/public:resources",
   ]
+
+  all_dependent_configs = [ ":browser_win_linker_flags" ]
 
   if (enable_basic_printing || enable_print_preview) {
     deps += [
