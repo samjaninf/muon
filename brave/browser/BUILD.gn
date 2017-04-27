@@ -2,6 +2,7 @@ import("//build/buildflag_header.gni")
 import("//build/config/chrome_build.gni")
 import("//build/config/compiler/compiler.gni")
 import("//build/config/features.gni")
+import("//build/config/ui.gni")
 import("//extensions/features/features.gni")
 import("//ppapi/features/features.gni")
 import("//printing/features/features.gni")
@@ -149,6 +150,22 @@ source_set("browser") {
       "//components/crash/content/app",
       "//components/crash/content/browser",
       "//components/version_info:generate_version_info",
+    ]
+  }
+
+  if (is_linux) {
+    if (use_x11) {
+      sources += [
+        "//chrome/browser/password_manager/password_store_x.h",
+        "//chrome/browser/password_manager/password_store_x.cc",
+      ]
+    }
+    if (use_dbus) {
+      deps += [ "//dbus" ]
+    }
+    sources += [
+      "//chrome/browser/password_manager/native_backend_kwallet_x.h",
+      "//chrome/browser/password_manager/native_backend_kwallet_x.cc",
     ]
   }
 }
