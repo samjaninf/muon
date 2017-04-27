@@ -109,7 +109,9 @@ source_set("browser") {
     "//third_party/WebKit/public:resources",
   ]
 
-  all_dependent_configs = [ ":browser_win_linker_flags" ]
+  if (is_win) {
+    all_dependent_configs = [ ":browser_win_linker_flags" ]
+  }
 
   if (enable_basic_printing || enable_print_preview) {
     deps += [
