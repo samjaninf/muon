@@ -500,6 +500,16 @@ void Autofill::AddLogin(mate::Arguments* args) {
   store->AddLogin(form);
 }
 
+void Autofill::UpdateLogin(mate::Arguments* args) {
+  autofill::PasswordForm form;
+  if (args->Length() == 1 && !args->GetNext(&form)) {
+    args->ThrowError();
+    return;
+  }
+  password_manager::PasswordStore* store = GetPasswordStore();
+  store->UpdateLogin(form);
+}
+
 void Autofill::RemoveLogin(mate::Arguments* args) {
   autofill::PasswordForm form;
   if (args->Length() == 1 && !args->GetNext(&form)) {
@@ -569,6 +579,7 @@ void Autofill::BuildPrototype(v8::Isolate* isolate,
     .SetMethod("getAutofillableLogins", &Autofill::GetAutofillableLogins)
     .SetMethod("getBlackedlistLogins", &Autofill::GetBlacklistLogins)
     .SetMethod("addLogin", &Autofill::AddLogin)
+    .SetMethod("updateLogin", &Autofill::UpdateLogin)
     .SetMethod("removeLogin", &Autofill::RemoveLogin)
     .SetMethod("clearLogins", &Autofill::ClearLogins);
 }

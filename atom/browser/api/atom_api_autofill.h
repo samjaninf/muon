@@ -86,6 +86,7 @@ class Autofill : public mate::TrackableObject<Autofill>,
   void GetBlacklistLogins(mate::Arguments* args);
 
   void AddLogin(mate::Arguments* args);
+  void UpdateLogin(mate::Arguments* args);
   void RemoveLogin(mate::Arguments* args);
 
   void ClearLogins();
