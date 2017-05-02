@@ -1175,8 +1175,8 @@ void NativeWindowMac::RenderViewHostChanged(
   RegisterInputEventObserver(new_host);
 }
 
-void NativeWindowMac::DidFirstPaintAfterLoad(
-    content::RenderWidgetHost* render_widget_host) {
+void NativeWindowMac::DidFirstVisuallyNonEmptyPaint() {
+  const auto render_widget_host = web_contents()->GetRenderWidgetHostView();
   // windowDidResignMain/windowDidResignKey don't always get called for new
   // windows on mac. This ensures that background window
   // RenderWidgetHostViews always start deactivated
