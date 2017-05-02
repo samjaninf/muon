@@ -42,7 +42,7 @@
 #include "content/public/common/web_preferences.h"
 #include "extensions/common/constants.h"
 #include "gpu/config/gpu_switches.h"
-#include "services/image_decoder/public/interfaces/constants.mojom.h"
+#include "services/data_decoder/public/interfaces/constants.mojom.h"
 #include "services/service_manager/public/cpp/interface_registry.h"
 #include "third_party/WebKit/public/web/WebWindowFeatures.h"
 #include "ui/base/l10n/l10n_util.h"
