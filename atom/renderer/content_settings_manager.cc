@@ -106,7 +106,7 @@ ContentSetting ContentSettingsManager::GetContentSettingFromRules(
     base::DictionaryValue* rule;
     std::string pattern_string;
     std::string setting_string;
-    if (!(*it)->GetAsDictionary(&rule) ||
+    if (!(*it).GetAsDictionary(&rule) ||
         !rule->GetString("primaryPattern", &pattern_string) ||
         !rule->GetString("setting", &setting_string)) {
       // skip invalid entries
